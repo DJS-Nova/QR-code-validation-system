@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import LiveSimulation from "./pages/LiveSimulation";
-import ScanQR from "./pages/Scanqr";
+import QRScanner from "./pages/QRScanner";
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<LiveSimulation />} />
-          <Route path="/contact" element={<ScanQR />} />
+          <Route path="/contact" element={<QRScanner />} />
         </Routes>
       </div>
     </>

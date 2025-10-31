@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 
-export default function QRScannerPage() {
+const QRScanner = () => {
   const [scannedData, setScannedData] = useState("");
   const [studentData, setStudentData] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -256,3 +256,5 @@ export default function QRScannerPage() {
     </div>
   );
 }
+
+export default QRScanner
