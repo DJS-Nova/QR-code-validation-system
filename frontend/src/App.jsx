@@ -4,11 +4,11 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import LiveSimulation from "./pages/LiveSimulation";
 import QRScanner from "./pages/QRScanner";
-import LoginModal from "./components/loginmodal";
 import CheckPoint from "./pages/Checkpoint";
 import Participants from "./pages/Participants";
 import socket from "./socket";
 import CheckpointParticipants from "./pages/CheckpointParticipants";
+import LoginModal from "./components/LoginModal";
 
 function App() {
   const [showLogin, setShowLogin] = useState(true);
