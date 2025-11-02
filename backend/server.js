@@ -16,6 +16,9 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 // Import socket utility
 import { setSocketIO } from "./utils/socket.js";
 
+// Import error handlers
+import { errorHandler, notFoundHandler } from "./utils/expressError.js";
+
 const app = express();
 const PORT = 5000;
 
@@ -51,6 +54,12 @@ app.use("/api/participants", participantRoutes);
 app.use("/api/scan", scanRoutes);
 app.use("/api", statusRoutes);
 app.use("/api", dashboardRoutes);
+
+// 404 handler - must be after all routes
+app.use(notFoundHandler);
+
+// Error handler - must be last middleware
+app.use(errorHandler);
 
 // ✅ SERVER START
 httpServer.listen(PORT, () => {

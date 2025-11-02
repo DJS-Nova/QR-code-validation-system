@@ -6,13 +6,14 @@ import {
   updateCheckpoint,
   deleteCheckpoint,
 } from "../controllers/checkpoint.controller.js";
+import { wrapAsync } from "../utils/expressError.js";
 
 const router = express.Router();
 
-router.post("/", verifyToken, isSuperAdmin, createCheckpoint);
-router.get("/", verifyToken, getAllCheckpoints);
-router.put("/:id", verifyToken, isSuperAdmin, updateCheckpoint);
-router.delete("/:id", verifyToken, isSuperAdmin, deleteCheckpoint);
+router.post("/", verifyToken, isSuperAdmin, wrapAsync(createCheckpoint));
+router.get("/", verifyToken, wrapAsync(getAllCheckpoints));
+router.put("/:id", verifyToken, isSuperAdmin, wrapAsync(updateCheckpoint));
+router.delete("/:id", verifyToken, isSuperAdmin, wrapAsync(deleteCheckpoint));
 
 export default router;
 
