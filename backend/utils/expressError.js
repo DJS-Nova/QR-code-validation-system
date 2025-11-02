@@ -57,10 +57,23 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // For non-API requests, redirect to error page
-  // You can customize the error page URL
-  const errorPageUrl = `/error?status=${statusCode}&message=${encodeURIComponent(message)}`;
-  res.redirect(errorPageUrl);
+  // For non-API requests, try redirect — but prevent infinite loops
+  // if (req.originalUrl.startsWith("/error")) {
+  //   // If already on /error, don't redirect again — just respond compactly
+  //   return res.status(statusCode).json({
+  //     success: false,
+  //     error: { message, statusCode },
+  //   });
+  // }
+
+  // // Safe redirect for normal cases
+  // const errorPageUrl = `/error?status=${statusCode}&message=${encodeURIComponent(message)}`;
+  // res.redirect(errorPageUrl);
+
+  return res.status(statusCode).json({
+    success: false,
+    error: { message, statusCode },
+  });
 };
 
 /**
@@ -70,4 +83,3 @@ export const notFoundHandler = (req, res, next) => {
   const error = new ExpressError(`Route ${req.originalUrl} not found`, 404);
   next(error);
 };
-

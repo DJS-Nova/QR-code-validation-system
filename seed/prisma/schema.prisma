@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  role      Role     @default(admin)
+}
+
+model Checkpoint {
+  id        String         @id
+  name      String
+  type      CheckpointType
+  timeLimit Int?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime
+  Visit     Visit[]
+}
+
+model Participant {
+  id               String   @id
+  name             String
+  email            String   @unique
+  phone            String
+  branch           String?
+  year             String?
+  token            String   @unique
+  qrUrl            String
+  registrationTime DateTime @default(now())
+  Visit            Visit[]
+}
+
+model Visit {
+  id            String      @id
+  participantId String
+  checkpointId  String
+  visitCount    Int         @default(0)
+  lastStatus    VisitStatus @default(NOT_VISITED)
+  lastScanTime  DateTime?
+  Checkpoint    Checkpoint  @relation(fields: [checkpointId], references: [id])
+  Participant   Participant @relation(fields: [participantId], references: [id])
+}
+
+enum CheckpointType {
+  SINGLE
+  MULTIPLE
+}
+
+enum Role {
+  superadmin
+  admin
+}
+
+enum VisitStatus {
+  NOT_VISITED
+  INSIDE
+  EXITED
+}

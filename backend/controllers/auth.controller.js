@@ -10,8 +10,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
+  console.log(email,password);
   
   const admin = await prisma.admin.findUnique({ where: { email } });
+  console.log(admin);
+  
   if (!admin) {
     throw new ExpressError("Admin not found", 404);
   }
