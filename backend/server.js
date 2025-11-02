@@ -55,6 +55,11 @@ app.use("/api/scan", scanRoutes);
 app.use("/api", statusRoutes);
 app.use("/api", dashboardRoutes);
 
+app.get("/", (req, res) => {
+  res.send("✅ Backend is live and running on Render!");
+});
+
+
 // 404 handler - must be after all routes
 app.use(notFoundHandler);
 
