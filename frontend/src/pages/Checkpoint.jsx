@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import socket from "../socket";
 
 function Checkpoint() {
   const [checkpoints, setCheckpoints] = useState([]);
@@ -41,7 +42,32 @@ const fetchCheckpoints = async () => {
   useEffect(() => {
     console.log("Token being sent:", token);
     fetchCheckpoints();
-  }, []);
+
+    // Listen to real-time checkpoint updates
+    socket.on("checkpoints:updated", (updatedCheckpoints) => {
+      setCheckpoints(Array.isArray(updatedCheckpoints) ? updatedCheckpoints : []);
+    });
+
+    socket.on("checkpoint:created", () => {
+      fetchCheckpoints();
+    });
+
+    socket.on("checkpoint:updated", () => {
+      fetchCheckpoints();
+    });
+
+    socket.on("checkpoint:deleted", () => {
+      fetchCheckpoints();
+    });
+
+    // Cleanup
+    return () => {
+      socket.off("checkpoints:updated");
+      socket.off("checkpoint:created");
+      socket.off("checkpoint:updated");
+      socket.off("checkpoint:deleted");
+    };
+  }, [token, API_BASE_URL]);
 
   // Handle create or update
   const handleSubmit = async (e) => {

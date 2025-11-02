@@ -7,6 +7,7 @@ import QRScanner from "./pages/QRScanner";
 import LoginModal from "./components/loginmodal";
 import CheckPoint from "./pages/Checkpoint";
 import Participants from "./pages/Participants";
+import socket from "./socket";
 
 function App() {
   const [showLogin, setShowLogin] = useState(true);
@@ -14,6 +15,13 @@ function App() {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Ensure socket is connected when authenticated
+  useEffect(() => {
+    if (isAuthenticated && !socket.connected) {
+      socket.connect();
+    }
+  }, [isAuthenticated]);
 
   // ✅ Restore session on first load (no redirect here)
   useEffect(() => {

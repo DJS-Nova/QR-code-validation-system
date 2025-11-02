@@ -161,6 +161,7 @@
 
 import { useEffect, useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import socket from "../socket";
 
 const QRScanner = () => {
   const [checkpoints, setCheckpoints] = useState([]);
@@ -175,14 +176,31 @@ const QRScanner = () => {
   const authToken = localStorage.getItem("token");
 
   // ✅ Fetch checkpoints
+  const fetchCheckpoints = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/checkpoints`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      setCheckpoints(data);
+    } catch (err) {
+      console.error("Failed to load checkpoints:", err);
+    }
+  };
+
   useEffect(() => {
-    fetch(`${API_BASE_URL}/checkpoints`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setCheckpoints(data))
-      .catch((err) => console.error("Failed to load checkpoints:", err));
-  }, []);
+    fetchCheckpoints();
+
+    // Listen to real-time checkpoint updates
+    socket.on("checkpoints:updated", (updatedCheckpoints) => {
+      setCheckpoints(Array.isArray(updatedCheckpoints) ? updatedCheckpoints : []);
+    });
+
+    // Cleanup
+    return () => {
+      socket.off("checkpoints:updated");
+    };
+  }, [authToken, API_BASE_URL]);
 
   // ✅ Check participant status once valid token entered or scanned
   useEffect(() => {

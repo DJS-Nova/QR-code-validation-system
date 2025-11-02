@@ -11,6 +11,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import socket from "../socket";
 const COLORS = ["#4ade80", "#f97316", "#3b82f6", "#ef4444"];
 
 const Home = () => {
@@ -36,10 +37,44 @@ const Home = () => {
       }
     };
 
+    // Initial fetch
     fetchStats();
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
-  }, []);
+
+    // Setup socket listeners
+    const handleDashboardStatsUpdate = (updatedStats) => {
+      console.log("Dashboard stats updated via socket:", updatedStats);
+      setStats(updatedStats);
+    };
+
+    const handleScanUpdate = (scanData) => {
+      console.log("Scan updated via socket:", scanData);
+      fetchStats(); // Fetch fresh stats when scan happens
+    };
+
+    const handleLiveStatusUpdate = () => {
+      fetchStats();
+    };
+
+    // Setup listeners
+    socket.on("dashboard-stats:updated", handleDashboardStatsUpdate);
+    socket.on("scan:updated", handleScanUpdate);
+    socket.on("live-status:updated", handleLiveStatusUpdate);
+
+    // Log connection status
+    console.log("Socket connected:", socket.connected);
+    if (!socket.connected) {
+      socket.once("connect", () => {
+        console.log("Socket connected, dashboard listeners active");
+      });
+    }
+
+    // Cleanup
+    return () => {
+      socket.off("dashboard-stats:updated", handleDashboardStatsUpdate);
+      socket.off("scan:updated", handleScanUpdate);
+      socket.off("live-status:updated", handleLiveStatusUpdate);
+    };
+  }, [API_BASE_URL, token]);
 
   if (!stats) {
     return <div className="text-center p-10">Loading dashboard...</div>;

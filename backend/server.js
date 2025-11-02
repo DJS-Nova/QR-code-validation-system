@@ -6,11 +6,33 @@ import prisma from "./prismaClient.js";
 import dotenv from "dotenv";
 dotenv.config();
 import { verifyToken, isSuperAdmin } from "./middleware/auth.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
 const app = express();
 const PORT = 5000;
 const JWT_SECRET = process.env.JWT_SECRET;
+
+// Create HTTP server and Socket.IO instance
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
 app.use(cors());
 app.use(express.json());
+
+// Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log("✅ Client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("❌ Client disconnected:", socket.id);
+  });
+});
 /* ------------------------- LOGIN ROUTE --------------------------*/ app.post(
   "/api/auth/login",
   async (req, res) => {
@@ -46,6 +68,16 @@ app.post("/api/checkpoints", verifyToken, isSuperAdmin, async (req, res) => {
     const checkpoint = await prisma.checkpoint.create({
       data: { name, type },
     });
+    
+    // Emit socket event for checkpoint creation
+    io.emit("checkpoint:created", checkpoint);
+    
+    // Also emit checkpoint list refresh event
+    const allCheckpoints = await prisma.checkpoint.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    io.emit("checkpoints:updated", allCheckpoints);
+    
     res.json(checkpoint);
   } catch (err) {
     console.error("Create Checkpoint Error:", err);
@@ -76,6 +108,16 @@ app.put("/api/checkpoints/:id", verifyToken, isSuperAdmin, async (req, res) => {
       where: { id },
       data: { name, type },
     });
+    
+    // Emit socket event for checkpoint update
+    io.emit("checkpoint:updated", updated);
+    
+    // Also emit checkpoint list refresh event
+    const allCheckpoints = await prisma.checkpoint.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    io.emit("checkpoints:updated", allCheckpoints);
+    
     res.json(updated);
   } catch (err) {
     console.error("Update Checkpoint Error:", err);
@@ -93,6 +135,16 @@ app.delete(
 
     try {
       await prisma.checkpoint.delete({ where: { id } });
+      
+      // Emit socket event for checkpoint deletion
+      io.emit("checkpoint:deleted", { id });
+      
+      // Also emit checkpoint list refresh event
+      const allCheckpoints = await prisma.checkpoint.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+      io.emit("checkpoints:updated", allCheckpoints);
+      
       res.json({ message: "Checkpoint deleted successfully" });
     } catch (err) {
       console.error("Delete Checkpoint Error:", err);
@@ -166,6 +218,66 @@ app.post("/api/scan", verifyToken, async (req, res) => {
 
     const activeCount = await prisma.visit.count({
       where: { checkpointId, lastStatus: "INSIDE" },
+    });
+
+    // Get live status for all checkpoints to emit
+    const checkpoints = await prisma.checkpoint.findMany({
+      include: {
+        visits: {
+          where: { lastStatus: "INSIDE" },
+        },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const formattedLiveStatus = checkpoints.map((cp) => ({
+      id: cp.id,
+      name: cp.name,
+      count: cp.visits.length,
+    }));
+
+    // Get dashboard stats to emit
+    const totalParticipants = await prisma.participant.count();
+    const insideVisits = await prisma.visit.findMany({
+      where: { lastStatus: "INSIDE" },
+      select: { participantId: true, checkpointId: true },
+    });
+    const checkedIn = new Set(insideVisits.map((v) => v.participantId)).size;
+    const exited = totalParticipants - checkedIn;
+
+    const liveByCheckpoint = await prisma.visit.groupBy({
+      by: ["checkpointId"],
+      where: { lastStatus: "INSIDE" },
+      _count: { checkpointId: true },
+    });
+
+    const checkpointData = await Promise.all(
+      liveByCheckpoint.map(async (c) => {
+        const checkpoint = await prisma.checkpoint.findUnique({
+          where: { id: c.checkpointId },
+        });
+        return { name: checkpoint.name, count: c._count.checkpointId };
+      })
+    );
+
+    // Emit socket events for scan
+    io.emit("scan:updated", {
+      participant,
+      visit: updatedVisit,
+      checkpointId,
+      action,
+      activeCount,
+    });
+
+    // Emit live status update
+    io.emit("live-status:updated", formattedLiveStatus);
+
+    // Emit dashboard stats update
+    io.emit("dashboard-stats:updated", {
+      totalParticipants,
+      checkedIn,
+      exited,
+      checkpointData,
     });
 
     res.json({
@@ -269,5 +381,8 @@ app.get("/api/dashboard-stats", verifyToken, isSuperAdmin, async (req, res) => {
 });
 
 // ✅ SERVER START
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+httpServer.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Socket.IO server ready`);
+});
 

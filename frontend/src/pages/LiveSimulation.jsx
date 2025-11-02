@@ -14,6 +14,7 @@
 
 import React, { useEffect, useState } from "react";
 import PeopleSimulation from "../components/PeopleSimulation";
+import socket from "../socket";
 
 const LiveSimulation = () => {
   const [checkpoints, setCheckpoints] = useState([]);
@@ -34,10 +35,31 @@ const LiveSimulation = () => {
   };
 
   useEffect(() => {
+    // Initial fetch
     fetchLiveStatus();
-    const interval = setInterval(fetchLiveStatus, 5000); // refresh every 5s
-    return () => clearInterval(interval);
-  }, []);
+
+    // Listen to real-time live status updates
+    socket.on("live-status:updated", (updatedStatus) => {
+      setCheckpoints(updatedStatus);
+    });
+
+    // Also listen to scan updates
+    socket.on("scan:updated", () => {
+      fetchLiveStatus();
+    });
+
+    // Listen to checkpoint updates (new checkpoints might be added)
+    socket.on("checkpoints:updated", () => {
+      fetchLiveStatus();
+    });
+
+    // Cleanup
+    return () => {
+      socket.off("live-status:updated");
+      socket.off("scan:updated");
+      socket.off("checkpoints:updated");
+    };
+  }, [API_BASE_URL, token]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
