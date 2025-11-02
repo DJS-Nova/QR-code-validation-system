@@ -119,6 +119,14 @@ function Navbar({ role }) {
             >
               Participants
             </NavLink>
+            <NavLink
+              to="/simulation"
+              className={({ isActive }) =>
+                isActive ? `${linkClass} bg-blue-700` : linkClass
+              }
+            >
+              Live Simulation
+            </NavLink>
           </>
         )}
 
@@ -133,7 +141,12 @@ function Navbar({ role }) {
             >
               Scan QR
             </NavLink>
-            <NavLink
+          </>
+        )}
+
+        {role === "showadmin" && (
+          <>
+           <NavLink
               to="/simulation"
               className={({ isActive }) =>
                 isActive ? `${linkClass} bg-blue-700` : linkClass

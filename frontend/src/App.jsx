@@ -8,6 +8,7 @@ import LoginModal from "./components/loginmodal";
 import CheckPoint from "./pages/Checkpoint";
 import Participants from "./pages/Participants";
 import socket from "./socket";
+import CheckpointParticipants from "./pages/CheckpointParticipants";
 
 function App() {
   const [showLogin, setShowLogin] = useState(true);
@@ -46,7 +47,7 @@ function App() {
     setIsAuthenticated(true);
 
     if (role === "superadmin") navigate("/dashboard");
-    else if (role === "admin") navigate("/simulation");
+    else if (role === "admin") navigate("/scan-qr");
   };
 
   if (loading) {
@@ -95,7 +96,7 @@ function App() {
                 path="/participants"
                 element={
                   role === "superadmin" ? (
-                    <Participants />
+                    <CheckpointParticipants />
                   ) : (
                     <div className="text-center text-red-600 p-10 font-bold">
                       ❌ Access denied: Super Admins only
@@ -105,13 +106,26 @@ function App() {
               />
 
               {/* ✅ Admin Routes */}
-              <Route path="/simulation" element={<LiveSimulation />} />
+              {/* <Route path="/simulation" element={<LiveSimulation />} /> */}
               <Route path="/scan-qr" element={<QRScanner />} />
 
               {/* ✅ Default Route */}
               <Route
                 path="/"
-                element={role === "superadmin" ? <Home /> : <LiveSimulation />}
+                element={role === "superadmin" ? <Home /> : <QRScanner />}
+              />
+
+              <Route
+                path="/simulation"
+                element={
+                  (role === "superadmin" || role === "showadmin") ? (
+                    <LiveSimulation />
+                  ) : (
+                    <div className="text-center text-red-600 p-10 font-bold">
+                      ❌ Access denied: Super Admins only
+                    </div>
+                  )
+                }
               />
 
               {/* ✅ Fallback */}

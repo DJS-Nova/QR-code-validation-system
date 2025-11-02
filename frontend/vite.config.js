@@ -10,7 +10,7 @@ export default defineConfig({
     mkcert(),tailwindcss()
   ],
   server: {
-    https: true,
+    https: false,
     host: '0.0.0.0', // This allows access from your local network
     port: 5173
   }

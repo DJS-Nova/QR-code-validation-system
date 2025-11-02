@@ -4,6 +4,7 @@ import "./LoginModal.css";
 function LoginModal({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const[isLoading,setIsLoading]=useState(false);
   const [error, setError] = useState("");
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -12,6 +13,7 @@ function LoginModal({ onLoginSuccess }) {
     setError("");
 
     try {
+      setIsLoading(true);
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -24,8 +26,10 @@ function LoginModal({ onLoginSuccess }) {
       } else {
         onLoginSuccess(data.token, data.role); // 👈 send role to parent
       }
+      setIsLoading(false);
     } catch (err) {
       setError("Something went wrong. Try again.");
+      setIsLoading(false);
     }
   };
 
@@ -48,7 +52,7 @@ function LoginModal({ onLoginSuccess }) {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <button type="submit">Login</button>
+          <button disabled={isLoading} type="submit" className={`${isLoading ? "opacity-50 cursor-not-allowed " : ""}`}>{isLoading ? "Logging in..." : "Login"}</button>
           {error && <p className="error">{error}</p>}
         </form>
       </div>
