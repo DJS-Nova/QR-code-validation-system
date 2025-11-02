@@ -21,7 +21,6 @@ yarn-error.log*
 # ------------------------------------
 # Keep environment variables secret
 .env
-.env.*
 .vercel/output
 .npmrc
 .pnpm-store
@@ -44,3 +43,4 @@ Thumbs.db
 .idea/
 *.sublime-project
 *.sublime-workspace
+/generated/prisma

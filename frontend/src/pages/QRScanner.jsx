@@ -1,260 +1,377 @@
-"use client";
+// import { useEffect, useState } from "react";
+// import { Scanner } from "@yudiel/react-qr-scanner";
 
-import { useState } from "react";
+// const QRScanner = () => {
+//   const [checkpoints, setCheckpoints] = useState([]);
+//   const [selectedCheckpoint, setSelectedCheckpoint] = useState(null);
+//   const [showModal, setShowModal] = useState(false);
+//   const [token, setToken] = useState("");
+//   const [scanning, setScanning] = useState(false);
+//   const [resultMessage, setResultMessage] = useState("");
+
+//   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+//   const authToken = localStorage.getItem("token");
+
+//   // Fetch checkpoints
+//   useEffect(() => {
+//     fetch(`${API_BASE_URL}/checkpoints`, {
+//       headers: { Authorization: `Bearer ${authToken}` },
+//     })
+//       .then(res => res.json())
+//       .then(data => setCheckpoints(data))
+//       .catch(err => console.error("Failed to load checkpoints:", err));
+//   }, []);
+
+//   const handleScan = (result) => {
+//     if (result && result[0]) {
+//       const qrText = result[0].rawValue;
+//       const parts = qrText.split("/");
+//       const qrToken = parts[parts.length - 1];
+//       setToken(qrToken);
+//       setScanning(false);
+//     }
+//   };
+
+//   const handleValidate = async (action) => {
+//     if (!token || !selectedCheckpoint) return alert("Missing data");
+
+//     try {
+//       const res = await fetch(`${API_BASE_URL}/scan`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${authToken}`,
+//         },
+//         body: JSON.stringify({
+//           token,
+//           checkpointId: selectedCheckpoint.id,
+//           action,
+//         }),
+//       });
+
+//       const data = await res.json();
+//       if (!res.ok) throw new Error(data.message || "Error validating scan");
+
+//       setResultMessage(
+//         `✅ ${data.message}. Active participants: ${data.activeCount}`
+//       );
+//       setToken("");
+//     } catch (err) {
+//       console.error(err);
+//       setResultMessage(`❌ ${err.message}`);
+//     }
+//   };
+
+//   return (
+//     <div className="p-6 bg-gray-100 min-h-screen">
+//       <h1 className="text-3xl font-bold mb-6 text-center">📍 Checkpoints</h1>
+
+//       {/* Checkpoint Cards */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+//         {checkpoints.map((cp) => (
+//           <div
+//             key={cp.id}
+//             onClick={() => {
+//               setSelectedCheckpoint(cp);
+//               setShowModal(true);
+//               setResultMessage("");
+//               setToken("");
+//             }}
+//             className="p-5 bg-white rounded-xl shadow-md hover:shadow-xl cursor-pointer transition-transform transform hover:-translate-y-1"
+//           >
+//             <h2 className="text-xl font-semibold">{cp.name}</h2>
+//             <p className="text-gray-600">{cp.type}</p>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* Modal */}
+//       {showModal && selectedCheckpoint && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+//           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+//             <button
+//               onClick={() => setShowModal(false)}
+//               className="absolute top-3 right-4 text-gray-500 hover:text-red-600"
+//             >
+//               ✖
+//             </button>
+
+//             <h2 className="text-2xl font-bold mb-4 text-center text-indigo-600">
+//               {selectedCheckpoint.name}
+//             </h2>
+
+//             {/* Scanner */}
+//             {scanning ? (
+//               <div className="mb-4">
+//                 <Scanner
+//                   onScan={handleScan}
+//                   onError={() => setScanning(false)}
+//                   styles={{ container: { width: "100%" } }}
+//                 />
+//               </div>
+//             ) : (
+//               <button
+//                 onClick={() => setScanning(true)}
+//                 className="bg-green-500 text-white py-2 px-4 rounded w-full mb-4"
+//               >
+//                 📷 Open Camera
+//               </button>
+//             )}
+
+//             {/* Manual Input */}
+//             <input
+//               type="text"
+//               value={token}
+//               onChange={(e) => setToken(e.target.value)}
+//               placeholder="Enter Token Manually"
+//               className="w-full p-2 border rounded mb-4"
+//             />
+
+//             {/* Buttons */}
+//             <div className="flex gap-3">
+//               <button
+//                 onClick={() => handleValidate("entry")}
+//                 className="bg-blue-500 text-white px-4 py-2 rounded w-full"
+//               >
+//                 Validate Entry
+//               </button>
+//               <button
+//                 onClick={() => handleValidate("exit")}
+//                 className="bg-red-500 text-white px-4 py-2 rounded w-full"
+//               >
+//                 Validate Exit
+//               </button>
+//             </div>
+
+//             {/* Result */}
+//             {resultMessage && (
+//               <div className="mt-4 text-center font-semibold">
+//                 {resultMessage}
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default QRScanner;
+
+
+import { useEffect, useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import socket from "../socket";
 
 const QRScanner = () => {
-  const [scannedData, setScannedData] = useState("");
-  const [studentData, setStudentData] = useState(null);
-  const [isScanning, setIsScanning] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
-  const [cameraError, setCameraError] = useState(null);
+  const [checkpoints, setCheckpoints] = useState([]);
+  const [selectedCheckpoint, setSelectedCheckpoint] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [token, setToken] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
+  const [participantStatus, setParticipantStatus] = useState(null); // INSIDE / EXITED / NOT_VISITED
 
-  // 🔹 Start scanning - let getUserMedia handle permissions
-  const handleStartScanning = () => {
-    setCameraError(null);
-    setIsScanning(true);
-  };
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const authToken = localStorage.getItem("token");
 
-  // 🔹 Handle QR scan success
-  const handleScan = (result) => {
-    if (result && result[0]) {
-      const qrText = result[0].rawValue;
-      setScannedData(qrText);
-      setIsScanning(false);
-    }
-  };
-
-  // 🔹 Handle camera errors
-  const handleError = (error) => {
-    console.error("Camera error:", error);
-    setIsScanning(false);
-    
-    // Check error types for mobile
-    if (error?.name === "NotAllowedError") {
-      setCameraError("camera_denied");
-    } else if (error?.name === "NotFoundError") {
-      setCameraError("no_camera");
-    } else if (error?.name === "NotReadableError") {
-      setCameraError("camera_in_use");
-    } else {
-      setCameraError("unknown");
-    }
-  };
-
-  // 🔹 Mock validation (replace with real API)
-  const handleValidate = async () => {
-    setIsValidating(true);
+  // ✅ Fetch checkpoints
+  const fetchCheckpoints = async () => {
     try {
-      await new Promise((r) => setTimeout(r, 1500));
-      const data = {
-        name: "Ketan Gaikwad",
-        id: "60004210035",
-        email: "ketangaikwad035@gmail.com",
-        department: "CSE-DS",
-        year: "S.Y. B.Tech",
-      };
-      setStudentData(data);
-    } catch (error) {
-      alert("Error validating student data");
-    } finally {
-      setIsValidating(false);
+      const res = await fetch(`${API_BASE_URL}/checkpoints`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      setCheckpoints(data);
+    } catch (err) {
+      console.error("Failed to load checkpoints:", err);
     }
   };
 
-  // 🔹 Reset
-  const handleRescan = () => {
-    setScannedData("");
-    setStudentData(null);
-    setCameraError(null);
-    setIsScanning(true);
-  };
+  useEffect(() => {
+    fetchCheckpoints();
 
-  // 🔹 Render error messages based on error type
-  const renderErrorMessage = () => {
-    if (!cameraError) return null;
+    // Listen to real-time checkpoint updates
+    socket.on("checkpoints:updated", (updatedCheckpoints) => {
+      setCheckpoints(Array.isArray(updatedCheckpoints) ? updatedCheckpoints : []);
+    });
 
-    const errorMessages = {
-      camera_denied: {
-        title: "📷 Camera Access Blocked",
-        message: "Please allow camera access in your browser settings:",
-        instructions: [
-          "Tap the lock icon 🔒 or info icon ⓘ in the address bar",
-          "Find 'Camera' permissions",
-          "Select 'Allow' or 'Ask'",
-          "Refresh this page"
-        ]
-      },
-      no_camera: {
-        title: "📷 No Camera Found",
-        message: "No camera detected on your device.",
-        instructions: []
-      },
-      camera_in_use: {
-        title: "📷 Camera Busy",
-        message: "Camera is being used by another app. Please close other apps using the camera and try again.",
-        instructions: []
-      },
-      unknown: {
-        title: "❌ Camera Error",
-        message: "Unable to access camera. Please try again.",
-        instructions: []
+    // Cleanup
+    return () => {
+      socket.off("checkpoints:updated");
+    };
+  }, [authToken, API_BASE_URL]);
+
+  // ✅ Check participant status once valid token entered or scanned
+  useEffect(() => {
+    const fetchStatus = async () => {
+      if (token.length < 5 || !selectedCheckpoint) return;
+
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/participant-status/${token}/${selectedCheckpoint.id}`,
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          }
+        );
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Status fetch failed");
+
+        setParticipantStatus(data.status);
+      } catch (err) {
+        console.error("Status check failed:", err);
+        setParticipantStatus(null);
       }
     };
 
-    const error = errorMessages[cameraError];
+    fetchStatus();
+  }, [token, selectedCheckpoint]);
 
-    return (
-      <div className="w-full max-w-md bg-red-50 border-2 border-red-400 rounded-xl p-4 mb-4">
-        <h3 className="text-red-700 font-bold text-lg mb-2">{error.title}</h3>
-        <p className="text-red-600 mb-3">{error.message}</p>
-        {error.instructions.length > 0 && (
-          <ol className="list-decimal list-inside space-y-1 text-red-600 text-sm mb-3">
-            {error.instructions.map((instruction, idx) => (
-              <li key={idx}>{instruction}</li>
-            ))}
-          </ol>
-        )}
-        <button
-          onClick={handleStartScanning}
-          className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-all"
-        >
-          Try Again
-        </button>
-      </div>
-    );
+  // ✅ Handle QR Scan
+  const handleScan = (result) => {
+    if (result && result[0]) {
+      const qrText = result[0].rawValue;
+      const parts = qrText.split("/");
+      const qrToken = parts[parts.length - 1];
+      setToken(qrToken);
+      setScanning(false);
+    }
+  };
+
+  // ✅ Validate entry or exit
+  const handleValidate = async (action) => {
+    if (!token || !selectedCheckpoint) return alert("Missing data");
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/scan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          token,
+          checkpointId: selectedCheckpoint.id,
+          action,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error validating scan");
+
+      setResultMessage(
+        `✅ ${data.message}. Active participants: ${data.activeCount}`
+      );
+      setParticipantStatus(
+        action === "entry" ? "INSIDE" : "EXITED"
+      );
+      setToken("");
+    } catch (err) {
+      console.error(err);
+      setResultMessage(`❌ ${err.message}`);
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen px-4 py-8 bg-gradient-to-br from-indigo-500 to-purple-600 font-sans">
-      <h1 className="text-white text-3xl font-bold mb-6 text-center">
-        📱 QR Code Scanner
-      </h1>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6 text-center">📍 Checkpoints</h1>
 
-      {/* Show error messages */}
-      {renderErrorMessage()}
-
-      {/* Start Scanning Button */}
-      {!isScanning && !scannedData && !cameraError && (
-        <button
-          onClick={handleStartScanning}
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl mb-6 text-lg"
-        >
-          📷 Start Scanning
-        </button>
-      )}
-
-      {/* Scanner Component */}
-      {isScanning && (
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-5 mb-6">
-          <Scanner
-            onScan={handleScan}
-            onError={handleError}
-            constraints={{ 
-              facingMode: "environment",
-              aspectRatio: 1 
+      {/* Checkpoint Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {checkpoints.map((cp) => (
+          <div
+            key={cp.id}
+            onClick={() => {
+              setSelectedCheckpoint(cp);
+              setShowModal(true);
+              setResultMessage("");
+              setToken("");
+              setParticipantStatus(null);
             }}
-            formats={["qr_code"]}
-            components={{ 
-              audio: true, 
-              finder: true,
-              tracker: true 
-            }}
-            styles={{
-              container: { 
-                width: "100%", 
-                height: "auto",
-                position: "relative"
-              },
-              video: {
-                width: "100%",
-                borderRadius: "12px",
-                objectFit: "cover",
-              },
-            }}
-          />
-          <p className="text-center text-gray-600 mt-3 text-sm">
-            Point your camera at a QR code
-          </p>
-        </div>
-      )}
-
-      {/* Scanned Data */}
-      {scannedData && (
-        <div className="w-full max-w-md bg-white rounded-xl shadow-md p-4 mb-4 animate-fade-in">
-          <h2 className="text-indigo-600 font-semibold text-lg mb-2 flex items-center">
-            <span className="mr-2">✅</span> Scanned QR Code:
-          </h2>
-          <p className="break-words bg-gray-50 border-l-4 border-indigo-500 text-gray-800 p-3 rounded-md font-mono text-sm">
-            {scannedData}
-          </p>
-        </div>
-      )}
-
-      {/* Validate Button */}
-      {scannedData && !studentData && (
-        <button
-          onClick={handleValidate}
-          disabled={isValidating}
-          className={`w-full max-w-md py-4 rounded-xl text-lg font-bold text-white shadow-lg transition-all duration-300 ${
-            isValidating
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-500 hover:bg-green-600 hover:-translate-y-1 hover:shadow-xl"
-          }`}
-        >
-          {isValidating ? (
-            <span className="flex items-center justify-center">
-              <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Validating...
-            </span>
-          ) : (
-            "✓ Validate"
-          )}
-        </button>
-      )}
-
-      {/* Student Info */}
-      {studentData && (
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 mt-6 animate-fade-in">
-          <h2 className="text-indigo-600 font-bold text-xl mb-4 flex items-center">
-            <span className="mr-2">🎓</span> Student Information
-          </h2>
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-xl space-y-3 text-gray-800 border border-indigo-100">
-            <div className="flex flex-col sm:flex-row">
-              <strong className="text-indigo-600 w-full sm:w-32 mb-1 sm:mb-0">Name:</strong> 
-              <span className="font-medium">{studentData.name}</span>
-            </div>
-            <div className="flex flex-col sm:flex-row">
-              <strong className="text-indigo-600 w-full sm:w-32 mb-1 sm:mb-0">ID:</strong> 
-              <span className="font-mono text-sm">{studentData.id}</span>
-            </div>
-            <div className="flex flex-col sm:flex-row">
-              <strong className="text-indigo-600 w-full sm:w-32 mb-1 sm:mb-0">Email:</strong> 
-              <span className="text-sm break-all">{studentData.email}</span>
-            </div>
-            <div className="flex flex-col sm:flex-row">
-              <strong className="text-indigo-600 w-full sm:w-32 mb-1 sm:mb-0">Department:</strong> 
-              <span>{studentData.department}</span>
-            </div>
-            <div className="flex flex-col sm:flex-row">
-              <strong className="text-indigo-600 w-full sm:w-32 mb-1 sm:mb-0">Year:</strong> 
-              <span>{studentData.year}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={handleRescan}
-            className="w-full mt-5 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            className="p-5 bg-white rounded-xl shadow-md hover:shadow-xl cursor-pointer transition-transform transform hover:-translate-y-1"
           >
-            🔁 Scan Another QR Code
-          </button>
+            <h2 className="text-xl font-semibold">{cp.name}</h2>
+            <p className="text-gray-600">{cp.type}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal */}
+      {showModal && selectedCheckpoint && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-3 right-4 text-gray-500 hover:text-red-600"
+            >
+              ✖
+            </button>
+
+            <h2 className="text-2xl font-bold mb-4 text-center text-indigo-600">
+              {selectedCheckpoint.name}
+            </h2>
+
+            {/* Scanner */}
+            {scanning ? (
+              <div className="mb-4">
+                <Scanner
+                  onScan={handleScan}
+                  onError={() => setScanning(false)}
+                  styles={{ container: { width: "100%" } }}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setScanning(true)}
+                className="bg-green-500 text-white py-2 px-4 rounded w-full mb-4"
+              >
+                📷 Open Camera
+              </button>
+            )}
+
+            {/* Manual Input */}
+            <input
+              type="text"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Enter Token Manually"
+              className="w-full p-2 border rounded mb-4"
+            />
+
+            {/* Conditional Buttons */}
+            {token.length >= 5 && participantStatus && (
+              <div className="flex gap-3">
+                {participantStatus !== "INSIDE" && (
+                  <button
+                    onClick={() => handleValidate("entry")}
+                    className="bg-blue-500 text-white px-4 py-2 rounded w-full"
+                  >
+                    Validate Entry
+                  </button>
+                )}
+                {participantStatus === "INSIDE" && (
+                  <button
+                    onClick={() => handleValidate("exit")}
+                    className="bg-red-500 text-white px-4 py-2 rounded w-full"
+                  >
+                    Validate Exit
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Result Message */}
+            {resultMessage && (
+              <div className="mt-4 text-center font-semibold">
+                {resultMessage}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
-}
+};
 
-export default QRScanner
+export default QRScanner;

@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String   // hashed password
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  role        Role     @default(admin)
+}
+
+model Participant {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String
+  branch       String?
+  year         String?
+  token        String    @unique // e.g., "A7X9P"
+  qrUrl        String    // Cloudinary URL
+  registrationTime DateTime @default(now())
+  visits       Visit[]
+}
+
+model Checkpoint {
+  id            String     @id @default(cuid())
+  name          String
+  type          CheckpointType // SINGLE or MULTIPLE
+  timeLimit     Int?       // optional (in minutes)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  visits        Visit[]
+}
+
+model Visit {
+  id             String       @id @default(cuid())
+  participantId  String
+  checkpointId   String
+  visitCount     Int          @default(0)
+  lastStatus     VisitStatus  @default(NOT_VISITED)
+  lastScanTime   DateTime? 
+  participant    Participant  @relation(fields: [participantId], references: [id])
+  checkpoint     Checkpoint   @relation(fields: [checkpointId], references: [id])
+}
+
+enum CheckpointType {
+  SINGLE
+  MULTIPLE
+}
+
+enum VisitStatus {
+  NOT_VISITED
+  INSIDE
+  EXITED
+}
+
+enum Role {
+  superadmin
+  admin
+}
