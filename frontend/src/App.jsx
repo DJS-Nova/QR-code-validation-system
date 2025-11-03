@@ -95,7 +95,7 @@ function App() {
               <Route
                 path="/participants"
                 element={
-                  (role === "superadmin" || role === "showadmin") ? (
+                  role === "superadmin" || role === "showadmin" ? (
                     <CheckpointParticipants />
                   ) : (
                     <div className="text-center text-red-600 p-10 font-bold">
@@ -108,10 +108,10 @@ function App() {
               {/* ✅ Admin Routes */}
               {/* <Route path="/simulation" element={<LiveSimulation />} /> */}
 
-                            <Route
+              <Route
                 path="/scan-qr"
                 element={
-                  role === "superadmin" ? (
+                  role === "admin" ? (
                     <QRScanner />
                   ) : (
                     <div className="text-center text-red-600 p-10 font-bold">
@@ -124,15 +124,25 @@ function App() {
               {/* ✅ Default Route */}
               <Route
                 path="/"
-                element={role === "superadmin" ? <Home /> : role==="admin" ? <QRScanner /> : role==="showadmin" ? <CheckpointParticipants /> : <div className="text-center text-red-600 p-10 font-bold">
+                element={
+                  role === "superadmin" ? (
+                    <Home />
+                  ) : role === "admin" ? (
+                    <QRScanner />
+                  ) : role === "showadmin" ? (
+                    <CheckpointParticipants />
+                  ) : (
+                    <div className="text-center text-red-600 p-10 font-bold">
                       ❌ Access denied: only Authorized user can access
-                    </div>}
+                    </div>
+                  )
+                }
               />
 
               <Route
                 path="/simulation"
                 element={
-                  (role === "superadmin" || role === "showadmin") ? (
+                  role === "superadmin" || role === "showadmin" ? (
                     <LiveSimulation />
                   ) : (
                     <div className="text-center text-red-600 p-10 font-bold">
