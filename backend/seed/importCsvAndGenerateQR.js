@@ -41,6 +41,9 @@ async function processCSV(filePath) {
 
           console.log(`✅ Added ${newParticipant.name} (${newParticipant.email})`);
           await sendQRMail(newParticipant.email, newParticipant.name, uploadResponse.secure_url, token);
+
+          //  console.log(`✅ Added ${row.Name} (${row.Email})`);
+          // await sendQRMail(row.Email, row.Name, uploadResponse.secure_url, token);
         } catch (err) {
           console.error("Error processing row:", err);
         }
@@ -51,4 +54,4 @@ async function processCSV(filePath) {
 }
 
 // Run: node importCsvAndGenerateQR.js ./participants.csv
-processCSV("./participants.csv");
+processCSV("./filtered_participants.csv");
