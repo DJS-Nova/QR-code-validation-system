@@ -34,3 +34,17 @@ export const isSuperAdmin = (req, res, next) => {
   }
   next();
 };
+
+export const isAdmin = (req, res, next) => {
+  if (req.user.role !== "admin" && req.user.role !== "superadmin") {
+    return res.status(403).json({ message: "Access denied: Admins only" });
+  }
+  next();
+};
+
+export const isShowadmin = (req, res, next) => {  
+  if (req.user.role !== "showadmin" && req.user.role !== "superadmin") {
+    return res.status(403).json({ message: "Access denied: Participants only" });
+  }
+  next();
+};

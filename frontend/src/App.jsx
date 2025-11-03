@@ -107,12 +107,26 @@ function App() {
 
               {/* ✅ Admin Routes */}
               {/* <Route path="/simulation" element={<LiveSimulation />} /> */}
-              <Route path="/scan-qr" element={<QRScanner />} />
+
+                            <Route
+                path="/scan-qr"
+                element={
+                  role === "superadmin" ? (
+                    <QRScanner />
+                  ) : (
+                    <div className="text-center text-red-600 p-10 font-bold">
+                      ❌ Access denied: Super Admins only
+                    </div>
+                  )
+                }
+              />
 
               {/* ✅ Default Route */}
               <Route
                 path="/"
-                element={role === "superadmin" ? <Home /> : <QRScanner />}
+                element={role === "superadmin" ? <Home /> : role==="admin" ? <QRScanner /> : role==="showadmin" ? <CheckpointParticipants /> : <div className="text-center text-red-600 p-10 font-bold">
+                      ❌ Access denied: only Authorized user can access
+                    </div>}
               />
 
               <Route

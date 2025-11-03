@@ -547,7 +547,7 @@ export default function Home() {
       </div>
 
       {/* Recent Scans */}
-      <div className="bg-gray-900 p-4 rounded-2xl shadow-md">
+      {/* <div className="bg-gray-900 p-4 rounded-2xl shadow-md">
         <h2 className="text-lg text-white font-semibold mb-4">Recent Scans</h2>
         <ul className="space-y-2 max-h-72 overflow-y-auto">
           {recentScans.length === 0 ? (
@@ -574,7 +574,50 @@ export default function Home() {
             ))
           )}
         </ul>
-      </div>
+      </div> */}
+
+      <div className="bg-gray-900 p-4 rounded-2xl shadow-md">
+  <h2 className="text-lg text-white font-semibold mb-4">Recent Scans</h2>
+
+  {recentScans.length === 0 ? (
+    <p className="text-gray-400 text-sm">No recent scans yet</p>
+  ) : (
+    <div className="overflow-x-auto max-h-72 overflow-y-auto rounded-xl">
+      <table className="min-w-full text-sm text-gray-200 border-separate border-spacing-y-2">
+        <thead className="bg-gray-800 sticky top-0 z-10">
+          <tr>
+            <th className="px-4 py-2 text-left font-semibold text-gray-300">Participant</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-300">Checkpoint</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-300">Status</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-300">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {recentScans.map((scan, i) => (
+            <motion.tr
+              key={i}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gray-800 hover:bg-gray-700 transition-colors duration-200 rounded-lg"
+            >
+              <td className="px-4 py-2 font-semibold">{scan.participantName}</td>
+              <td className="px-4 py-2">{scan.checkpointName}</td>
+              <td
+                className={`px-4 py-2 font-medium ${
+                  scan.status === "INSIDE" ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {scan.status}
+              </td>
+              <td className="px-4 py-2 text-gray-400">{scan.time}</td>
+            </motion.tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
     </div>
   );
 }

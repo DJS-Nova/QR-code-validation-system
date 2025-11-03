@@ -82,6 +82,11 @@ const LiveSimulation = () => {
             <PeopleSimulation peopleCount={cp.count} />
           </div>
         ))}
+
+        {/* <div key="xys" className="bg-white shadow-lg rounded-xl p-4">
+            <h2 className="text-center text-xl font-semibold mb-2">xyz</h2>
+            <PeopleSimulation peopleCount={100} />
+          </div> */}
       </div>
     </div>
   );

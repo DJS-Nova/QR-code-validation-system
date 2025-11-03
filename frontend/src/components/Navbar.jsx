@@ -146,6 +146,14 @@ function Navbar({ role }) {
 
         {role === "showadmin" && (
           <>
+                      <NavLink
+              to="/participants"
+              className={({ isActive }) =>
+                isActive ? `${linkClass} bg-blue-700` : linkClass
+              }
+            >
+              participants
+            </NavLink>
            <NavLink
               to="/simulation"
               className={({ isActive }) =>
