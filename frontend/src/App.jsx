@@ -95,7 +95,7 @@ function App() {
               <Route
                 path="/participants"
                 element={
-                  role === "superadmin" ? (
+                  (role === "superadmin" || role === "showadmin") ? (
                     <CheckpointParticipants />
                   ) : (
                     <div className="text-center text-red-600 p-10 font-bold">
