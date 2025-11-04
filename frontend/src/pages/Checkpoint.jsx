@@ -104,11 +104,23 @@ const fetchCheckpoints = async () => {
 
   // Handle delete
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure?")) return;
+    if (!window.confirm(`Are you sure? ${id} `)) return;
 
     await fetch(`${API_BASE_URL}/checkpoints/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
+    });
+
+    fetchCheckpoints();
+  };
+
+    const handleBunchExit = async (id) => {
+    if (!window.confirm(`Are you sure? ${id} `)) return;
+
+    await fetch(`${API_BASE_URL}/checkpoints/validate-exit/${id}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({checkpointId: id}),
     });
 
     fetchCheckpoints();
@@ -180,6 +192,12 @@ const fetchCheckpoints = async () => {
                   className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                 >
                   Delete
+                </button>
+                 <button
+                  onClick={() => handleBunchExit(cp.id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                >
+                  Validate Bunch Exit
                 </button>
               </td>
             </tr>
