@@ -18,6 +18,7 @@ export const validateExit = async (req, res) => {
   await prisma.visit.updateMany({
     where: {
       participantId: { in: participantIds },
+      checkpointId:checkpoint.id,
     },
     data: {
       lastStatus: "EXITED",
